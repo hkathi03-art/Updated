@@ -297,6 +297,12 @@ body.sb-collapsed .main-wrap{margin-left:0!important}
 .auth-role-switch{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:1rem}
 .auth-role-btn{padding:.52rem .7rem;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:.76rem;font-weight:700;transition:all .2s}
 .auth-role-btn.active{background:var(--yellow);border-color:var(--yellow);color:#111}
+.auth-action-switch{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:1rem}
+.auth-action-btn{padding:.52rem .7rem;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:.74rem;font-weight:700;transition:all .2s}
+.auth-action-btn.active{background:var(--yellow-lt);border-color:var(--yellow);color:#111}
+.auth-student-preview{margin-bottom:1rem;padding:.7rem .8rem;border:1px solid var(--border);background:var(--bg);border-radius:10px;display:flex;flex-direction:column;gap:.1rem}
+.auth-student-preview strong{font-size:.8rem;color:var(--text)}
+.auth-student-preview span{font-size:.74rem;color:var(--text3)}
 .auth-link-btn{margin:.8rem auto 0;display:block;background:transparent;border:none;color:var(--yellow-dk);font-weight:700;font-size:.78rem;cursor:pointer}
 .auth-link-btn:hover{text-decoration:underline}
 
