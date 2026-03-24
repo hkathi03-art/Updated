@@ -63,6 +63,13 @@ export default function Login() {
     setMsg(null)
     try {
       const authUser = await signIn(liEmail, liPass)
+
+      if (loginAs === 'student') {
+        toast('Welcome back! 👋', 'success')
+        router.push('/dashboard')
+        return
+      }
+
       const email = (authUser?.email || liEmail || '').toLowerCase()
       const { data: profile } = authUser?.id
         ? await supabase.from('profiles').select('role, major').eq('id', authUser.id).maybeSingle()
