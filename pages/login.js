@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../lib/useAuth'
 import { useToast } from '../components/Toast'
@@ -20,10 +20,12 @@ export default function Login() {
   const router = useRouter()
   const { signIn, signUp, signOut, resetPassword, user } = useAuth()
   const toast = useToast()
+
   const [tab, setTab] = useState('login')
+  const [loginAs, setLoginAs] = useState('student')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState(null)
-  const [loginAs, setLoginAs] = useState('student')
+  const [ready, setReady] = useState(false)
 
   // Login form state
   const [liEmail, setLiEmail] = useState('')
@@ -36,13 +38,28 @@ export default function Login() {
   const [suEmail, setSuEmail] = useState('')
   const [suPass, setSuPass] = useState('')
 
+  // Force a fresh login chooser view whenever /login is opened
+  // so it does not auto-open with a previously logged-in person.
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      try {
+        if (user) await signOut()
+      } catch {
+        // no-op
+      } finally {
+        if (active) setReady(true)
+      }
+    })()
+    return () => {
+      active = false
+    }
+  }, []) // intentionally run once on mount
+
   async function doDemoStudentLogin(student) {
     setLoading(true)
     setMsg(null)
     try {
-      if (user?.email && user.email !== student.email) {
-        await signOut()
-      }
       await signInDemoStudent(supabase, student, DEMO_PASS)
       toast(`Welcome, ${student.name}!`, 'success')
       router.push('/dashboard')
@@ -55,7 +72,7 @@ export default function Login() {
 
   async function doLogin() {
     if (!liEmail || !liPass) {
-      setMsg({ type: 'error', text: 'Please enter email and password' })
+      setMsg({ type: 'error', text: 'Please enter email and password.' })
       return
     }
 
@@ -64,29 +81,39 @@ export default function Login() {
     try {
       const authUser = await signIn(liEmail, liPass)
 
+      // Student path
       if (loginAs === 'student') {
         toast('Welcome back! 👋', 'success')
         router.push('/dashboard')
         return
       }
 
+      // Admin path with authorization check
       const email = (authUser?.email || liEmail || '').toLowerCase()
       const { data: profile } = authUser?.id
-        ? await supabase.from('profiles').select('role, major').eq('id', authUser.id).maybeSingle()
+        ? await supabase
+            .from('profiles')
+            .select('role, major')
+            .eq('id', authUser.id)
+            .maybeSingle()
         : { data: null }
+
       const role = (profile?.role || '').toLowerCase()
       const major = (profile?.major || '').toLowerCase()
-      const isAdmin = (
+
+      const isAdmin =
         role === 'admin' ||
         role === 'staff' ||
         role === 'faculty' ||
         (email.endsWith('@bowiestate.edu') && !email.includes('@students.')) ||
         major.includes('staff') ||
         major.includes('faculty')
-      )
 
       if (!isAdmin) {
-        setMsg({ type: 'error', text: 'This account is not authorized as Admin/Staff.' })
+        setMsg({
+          type: 'error',
+          text: 'This account is not authorized as Admin/Staff.',
+        })
         return
       }
 
@@ -101,19 +128,24 @@ export default function Login() {
 
   async function doSignUp() {
     if (!suName || !suEmail || !suPass) {
-      setMsg({ type: 'error', text: 'Please fill in all required fields' })
+      setMsg({ type: 'error', text: 'Please fill in all required fields.' })
       return
     }
     if (suPass.length < 8) {
-      setMsg({ type: 'error', text: 'Password must be at least 8 characters' })
+      setMsg({ type: 'error', text: 'Password must be at least 8 characters.' })
       return
     }
+
     setLoading(true)
     setMsg(null)
     try {
       await signUp(suEmail, suPass, suName, suCountry, suMajor)
-      setMsg({ type: 'success', text: 'Account created! Check your email to confirm, then sign in.' })
+      setMsg({
+        type: 'success',
+        text: 'Account created! Check your email to confirm, then sign in.',
+      })
       setTab('login')
+      setLoginAs('student')
     } catch (e) {
       setMsg({ type: 'error', text: e.message })
     } finally {
@@ -123,14 +155,21 @@ export default function Login() {
 
   async function handleForgotPassword() {
     if (!liEmail) {
-      setMsg({ type: 'error', text: 'Enter your email first, then click Forgot Password.' })
+      setMsg({
+        type: 'error',
+        text: 'Enter your email first, then click Forgot Password.',
+      })
       return
     }
+
     setLoading(true)
     setMsg(null)
     try {
       await resetPassword(liEmail)
-      setMsg({ type: 'success', text: 'Password reset email sent. Check your inbox for the reset link.' })
+      setMsg({
+        type: 'success',
+        text: 'Password reset email sent. Check your inbox for the reset link.',
+      })
     } catch (e) {
       setMsg({ type: 'error', text: e.message })
     } finally {
@@ -138,46 +177,84 @@ export default function Login() {
     }
   }
 
+  if (!ready) {
+    return (
+      <div className="main-wrap">
+        <div className="auth-wrap">
+          <div className="auth-card">
+            <div className="auth-sub" style={{ textAlign: 'center' }}>
+              Preparing sign-in…
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="main-wrap">
       <div className="auth-wrap">
         <div className="auth-card">
           <div style={{ textAlign: 'center', marginBottom: '1.4rem' }}>
-            <div className="auth-icon" style={{ display: 'inline-flex' }}>🎓</div>
+            <div className="auth-icon" style={{ display: 'inline-flex' }}>
+              🎓
+            </div>
             <div className="auth-title">BSU International Portal</div>
-            <div className="auth-sub">{tab === 'login' ? 'Sign in to your account' : 'Create your student account'}</div>
+            <div className="auth-sub">
+              {tab === 'login'
+                ? 'Sign in to your account'
+                : 'Create your student account'}
+            </div>
           </div>
 
           <div className="auth-tabs">
-            <div className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => { setTab('login'); setMsg(null) }}>Sign In</div>
-            <div className={`auth-tab${tab === 'signup' ? ' active' : ''}`} onClick={() => { setTab('signup'); setMsg(null) }}>Create Account</div>
+            <div
+              className={`auth-tab${tab === 'login' ? ' active' : ''}`}
+              onClick={() => {
+                setTab('login')
+                setMsg(null)
+              }}
+            >
+              Sign In
+            </div>
+            <div
+              className={`auth-tab${tab === 'signup' ? ' active' : ''}`}
+              onClick={() => {
+                setTab('signup')
+                setMsg(null)
+              }}
+            >
+              Create Account
+            </div>
           </div>
 
-          {msg && <div className={msg.type === 'error' ? 'error-box' : 'success-box'}>{msg.text}</div>}
-
-          {user && (
-            <div className="auth-session-bar">
-              <span>Signed in as <strong>{user.email}</strong></span>
-              <div className="auth-session-actions">
-                <button className="btn btn-outline btn-sm" onClick={() => router.push('/dashboard')}>Dashboard</button>
-                <button className="btn btn-dark btn-sm" onClick={signOut}>Sign Out</button>
-              </div>
+          {msg && (
+            <div className={msg.type === 'error' ? 'error-box' : 'success-box'}>
+              {msg.text}
             </div>
           )}
 
           {tab === 'login' ? (
             <>
-              <div className="auth-role-switch" role="tablist" aria-label="Sign-in role">
+              <div
+                className="auth-role-switch"
+                role="tablist"
+                aria-label="Sign-in role"
+              >
                 <button
                   type="button"
-                  className={`auth-role-btn${loginAs === 'student' ? ' active' : ''}`}
+                  className={`auth-role-btn${
+                    loginAs === 'student' ? ' active' : ''
+                  }`}
                   onClick={() => setLoginAs('student')}
                 >
                   Sign in as Student
                 </button>
                 <button
                   type="button"
-                  className={`auth-role-btn${loginAs === 'admin' ? ' active' : ''}`}
+                  className={`auth-role-btn${
+                    loginAs === 'admin' ? ' active' : ''
+                  }`}
                   onClick={() => setLoginAs('admin')}
                 >
                   Sign in as Admin
@@ -189,12 +266,17 @@ export default function Login() {
                 <input
                   className="form-input"
                   type="email"
-                  placeholder={loginAs === 'student' ? 'you@students.bowiestate.edu' : 'you@bowiestate.edu'}
+                  placeholder={
+                    loginAs === 'student'
+                      ? 'you@students.bowiestate.edu'
+                      : 'you@bowiestate.edu'
+                  }
                   value={liEmail}
                   onChange={(e) => setLiEmail(e.target.value)}
                   autoComplete="email"
                 />
               </div>
+
               <div className="form-group">
                 <label className="form-label">Password</label>
                 <input
@@ -206,10 +288,20 @@ export default function Login() {
                   onKeyDown={(e) => e.key === 'Enter' && doLogin()}
                 />
               </div>
-              <button className="btn btn-primary btn-full" onClick={doLogin} disabled={loading}>
+
+              <button
+                className="btn btn-primary btn-full"
+                onClick={doLogin}
+                disabled={loading}
+              >
                 {loading ? 'Signing in…' : 'Sign In'}
               </button>
-              <button className="auth-link-btn" onClick={handleForgotPassword} disabled={loading}>
+
+              <button
+                className="auth-link-btn"
+                onClick={handleForgotPassword}
+                disabled={loading}
+              >
                 Forgot Password?
               </button>
 
@@ -225,7 +317,9 @@ export default function Login() {
                         onClick={() => doDemoStudentLogin(student)}
                         disabled={loading}
                       >
-                        <span className="auth-demo-student-av">{getInitials(student.name)}</span>
+                        <span className="auth-demo-student-av">
+                          {getInitials(student.name)}
+                        </span>
                         <span>{student.name}</span>
                       </button>
                     ))}
@@ -237,32 +331,67 @@ export default function Login() {
             <>
               <div className="form-group">
                 <label className="form-label">Full Name *</label>
-                <input className="form-input" placeholder="Your full name" value={suName} onChange={e => setSuName(e.target.value)} />
+                <input
+                  className="form-input"
+                  placeholder="Your full name"
+                  value={suName}
+                  onChange={(e) => setSuName(e.target.value)}
+                />
               </div>
+
               <div className="form-2col">
                 <div className="form-group">
                   <label className="form-label">Country</label>
-                  <input className="form-input" placeholder="e.g. Nigeria" value={suCountry} onChange={e => setSuCountry(e.target.value)} />
+                  <input
+                    className="form-input"
+                    placeholder="e.g. Nigeria"
+                    value={suCountry}
+                    onChange={(e) => setSuCountry(e.target.value)}
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Major</label>
-                  <input className="form-input" placeholder="e.g. Computer Science" value={suMajor} onChange={e => setSuMajor(e.target.value)} />
+                  <input
+                    className="form-input"
+                    placeholder="e.g. Computer Science"
+                    value={suMajor}
+                    onChange={(e) => setSuMajor(e.target.value)}
+                  />
                 </div>
               </div>
+
               <div className="form-group">
                 <label className="form-label">Email *</label>
-                <input className="form-input" type="email" placeholder="you@students.bowiestate.edu" value={suEmail} onChange={e => setSuEmail(e.target.value)} />
+                <input
+                  className="form-input"
+                  type="email"
+                  placeholder="you@students.bowiestate.edu"
+                  value={suEmail}
+                  onChange={(e) => setSuEmail(e.target.value)}
+                />
               </div>
+
               <div className="form-group">
                 <label className="form-label">Password *</label>
-                <input className="form-input" type="password" placeholder="At least 8 characters" value={suPass} onChange={e => setSuPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && doSignUp()} />
+                <input
+                  className="form-input"
+                  type="password"
+                  placeholder="At least 8 characters"
+                  value={suPass}
+                  onChange={(e) => setSuPass(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && doSignUp()}
+                />
               </div>
-              <button className="btn btn-primary btn-full" onClick={doSignUp} disabled={loading}>
+
+              <button
+                className="btn btn-primary btn-full"
+                onClick={doSignUp}
+                disabled={loading}
+              >
                 {loading ? 'Creating account…' : 'Create Account'}
               </button>
             </>
           )}
-
         </div>
       </div>
     </div>
