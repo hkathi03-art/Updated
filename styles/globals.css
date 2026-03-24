@@ -81,12 +81,12 @@ body.sb-collapsed .main-wrap{margin-left:0!important}
 .nav-back-btn{display:inline-flex;align-items:center;gap:6px;padding:.36rem .72rem;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);font-size:.74rem;font-weight:700;cursor:pointer;transition:all .2s;flex-shrink:0}
 .nav-back-btn:hover{background:rgba(255,255,255,.16);color:#fff}
 .nav-right{display:flex;align-items:center;gap:.55rem;flex-shrink:0}
-.user-badge{display:flex;align-items:center;gap:6px;padding:.25rem .75rem .25rem .28rem;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.28);border-radius:999px;cursor:pointer;transition:all .2s}
+.user-badge{display:flex;align-items:center;gap:6px;padding:.25rem .75rem .25rem .28rem;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.4);border-radius:999px;cursor:pointer;transition:all .2s}
 .user-badge:hover{background:rgba(245,197,24,.22)}
-.user-av{width:26px;height:26px;border-radius:50%;background:var(--yellow);color:#111;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800}
-.user-badge span{color:#fff;font-size:.78rem;font-weight:600}
-.btn-signout{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.72);padding:.3rem .9rem;border-radius:999px;font-size:.72rem;font-weight:600;transition:all .2s}
-.btn-signout:hover{background:rgba(255,255,255,.18);color:#fff}
+.user-av{width:24px;height:24px;border-radius:50%;background:var(--yellow);color:#111;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900}
+.user-badge span{color:#fff;font-size:.75rem;font-weight:700;text-transform:lowercase}
+.btn-signout{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);color:#fff;padding:.28rem .88rem;border-radius:999px;font-size:.72rem;font-weight:700;transition:all .2s}
+.btn-signout:hover{background:rgba(255,255,255,.16);color:#fff}
 .theme-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;font-size:.92rem;cursor:pointer;transition:all .2s}
 .theme-btn:hover{background:rgba(255,255,255,.18);color:#fff}
 @media(max-width:960px){.nav-links{display:none}}
@@ -297,6 +297,16 @@ body.sb-collapsed .main-wrap{margin-left:0!important}
 .auth-role-switch{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:1rem}
 .auth-role-btn{padding:.52rem .7rem;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:.76rem;font-weight:700;transition:all .2s}
 .auth-role-btn.active{background:var(--yellow);border-color:var(--yellow);color:#111}
+.auth-demo-divider{display:flex;align-items:center;gap:.55rem;color:var(--text3);font-size:.72rem;text-transform:lowercase;margin:.15rem 0 .75rem}
+.auth-demo-divider::before,.auth-demo-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}
+.auth-demo-student{display:flex;align-items:center;gap:.45rem;padding:.45rem .55rem;border:1px solid var(--border2);background:var(--bg);border-radius:8px;font-size:.8rem;font-weight:700;color:var(--text);transition:all .2s;text-align:left}
+.auth-demo-student:hover{border-color:var(--yellow-dk);transform:translateY(-1px)}
+.auth-demo-student:disabled{opacity:.55;cursor:not-allowed}
+.auth-demo-student-av{width:18px;height:18px;border-radius:50%;background:var(--yellow);color:#111;display:grid;place-items:center;font-size:.58rem;font-weight:900;flex-shrink:0}
+.auth-session-bar{margin-bottom:.9rem;padding:.65rem .75rem;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+.auth-session-bar span{display:block;font-size:.74rem;color:var(--text2)}
+.auth-session-actions{display:flex;gap:.45rem;margin-top:.55rem}
 .auth-link-btn{margin:.8rem auto 0;display:block;background:transparent;border:none;color:var(--yellow-dk);font-weight:700;font-size:.78rem;cursor:pointer}
 .auth-link-btn:hover{text-decoration:underline}
 
