@@ -1,10 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../lib/useAuth'
 import { useToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { DEMO_PASS, DEMO_STUDENTS } from '../lib/data'
 import { signInDemoStudent } from '../lib/demoAuth'
+
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
 
 export default function Login() {
   const router = useRouter()
@@ -14,19 +24,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState(null)
   const [loginAs, setLoginAs] = useState('student')
-  const [studentAction, setStudentAction] = useState('signin')
-  const [selectedStudentKey, setSelectedStudentKey] = useState(DEMO_STUDENTS[0]?.key || '')
-
-  const selectedStudent = useMemo(
-    () => DEMO_STUDENTS.find((student) => student.key === selectedStudentKey) || null,
-    [selectedStudentKey]
-  )
-
-  useEffect(() => {
-    if (user) router.replace('/dashboard')
-  }, [user, router])
-
-  if (user) return null
 
   // Login form state
   const [liEmail, setLiEmail] = useState('')
@@ -39,34 +36,24 @@ export default function Login() {
   const [suEmail, setSuEmail] = useState('')
   const [suPass, setSuPass] = useState('')
 
-  async function doLogin() {
-    if (loginAs === 'student') {
-      if (!selectedStudent) {
-        setMsg({ type: 'error', text: 'Please choose a student from the list.' })
-        return
+  async function doDemoStudentLogin(student) {
+    setLoading(true)
+    setMsg(null)
+    try {
+      if (user?.email && user.email !== student.email) {
+        await signOut()
       }
-
-      setLoading(true)
-      setMsg(null)
-      try {
-        if (studentAction === 'signout') {
-          await signOut()
-          toast(`${selectedStudent.name} signed out.`, 'success')
-          setMsg({ type: 'success', text: `${selectedStudent.name} is now signed out.` })
-          return
-        }
-
-        await signInDemoStudent(supabase, selectedStudent, DEMO_PASS)
-        toast(`Welcome, ${selectedStudent.name}!`, 'success')
-        router.push('/dashboard')
-      } catch (e) {
-        setMsg({ type: 'error', text: e.message })
-      } finally {
-        setLoading(false)
-      }
-      return
+      await signInDemoStudent(supabase, student, DEMO_PASS)
+      toast(`Welcome, ${student.name}!`, 'success')
+      router.push('/dashboard')
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message })
+    } finally {
+      setLoading(false)
     }
+  }
 
+  async function doLogin() {
     if (!liEmail || !liPass) {
       setMsg({ type: 'error', text: 'Please enter email and password' })
       return
@@ -161,6 +148,16 @@ export default function Login() {
 
           {msg && <div className={msg.type === 'error' ? 'error-box' : 'success-box'}>{msg.text}</div>}
 
+          {user && (
+            <div className="auth-session-bar">
+              <span>Signed in as <strong>{user.email}</strong></span>
+              <div className="auth-session-actions">
+                <button className="btn btn-outline btn-sm" onClick={() => router.push('/dashboard')}>Dashboard</button>
+                <button className="btn btn-dark btn-sm" onClick={signOut}>Sign Out</button>
+              </div>
+            </div>
+          )}
+
           {tab === 'login' ? (
             <>
               <div className="auth-role-switch" role="tablist" aria-label="Sign-in role">
@@ -182,50 +179,21 @@ export default function Login() {
 
               {loginAs === 'student' ? (
                 <>
-                  <div className="auth-action-switch" role="tablist" aria-label="Student sign-in status">
-                    <button
-                      type="button"
-                      className={`auth-action-btn${studentAction === 'signin' ? ' active' : ''}`}
-                      onClick={() => setStudentAction('signin')}
-                    >
-                      Sign In Student
-                    </button>
-                    <button
-                      type="button"
-                      className={`auth-action-btn${studentAction === 'signout' ? ' active' : ''}`}
-                      onClick={() => setStudentAction('signout')}
-                    >
-                      Sign Out Student
-                    </button>
+                  <div className="auth-demo-divider">or quick demo login</div>
+                  <div className="auth-demo-grid">
+                    {DEMO_STUDENTS.map((student) => (
+                      <button
+                        key={student.key}
+                        type="button"
+                        className="auth-demo-student"
+                        onClick={() => doDemoStudentLogin(student)}
+                        disabled={loading}
+                      >
+                        <span className="auth-demo-student-av">{getInitials(student.name)}</span>
+                        <span>{student.name}</span>
+                      </button>
+                    ))}
                   </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Choose Student</label>
-                    <select
-                      className="form-input"
-                      value={selectedStudentKey}
-                      onChange={(e) => setSelectedStudentKey(e.target.value)}
-                    >
-                      {DEMO_STUDENTS.map((student) => (
-                        <option key={student.key} value={student.key}>
-                          {student.name} · {student.major}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedStudent && (
-                    <div className="auth-student-preview">
-                      <strong>{selectedStudent.name}</strong>
-                      <span>{selectedStudent.email}</span>
-                    </div>
-                  )}
-
-                  <button className="btn btn-primary btn-full" onClick={doLogin} disabled={loading}>
-                    {loading
-                      ? studentAction === 'signin' ? 'Signing in…' : 'Signing out…'
-                      : studentAction === 'signin' ? 'Sign In' : 'Sign Out'}
-                  </button>
                 </>
               ) : (
                 <>
