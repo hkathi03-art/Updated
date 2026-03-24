@@ -184,36 +184,7 @@ export default function Login() {
                 </button>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  className="form-input"
-                  type="email"
-                  placeholder={loginAs === 'student' ? 'you@students.bowiestate.edu' : 'you@bowiestate.edu'}
-                  value={liEmail}
-                  onChange={(e) => setLiEmail(e.target.value)}
-                  autoComplete="email"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Password</label>
-                <input
-                  className="form-input"
-                  type="password"
-                  placeholder="Your password"
-                  value={liPass}
-                  onChange={(e) => setLiPass(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && doLogin()}
-                />
-              </div>
-              <button className="btn btn-primary btn-full" onClick={doLogin} disabled={loading}>
-                {loading ? 'Signing in…' : 'Sign In'}
-              </button>
-              <button className="auth-link-btn" onClick={handleForgotPassword} disabled={loading}>
-                Forgot Password?
-              </button>
-
-              {loginAs === 'student' && (
+              {loginAs === 'student' ? (
                 <>
                   <div className="auth-demo-divider">or quick demo login</div>
                   <div className="auth-demo-grid">
@@ -230,6 +201,26 @@ export default function Login() {
                       </button>
                     ))}
                   </div>
+                </>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Email</label>
+                    <input className="form-input" type="email" placeholder="you@bowiestate.edu"
+                      value={liEmail} onChange={e => setLiEmail(e.target.value)} autoComplete="email" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Password</label>
+                    <input className="form-input" type="password" placeholder="Your password"
+                      value={liPass} onChange={e => setLiPass(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && doLogin()} />
+                  </div>
+                  <button className="btn btn-primary btn-full" onClick={doLogin} disabled={loading}>
+                    {loading ? 'Signing in…' : 'Sign In as Admin'}
+                  </button>
+                  <button className="auth-link-btn" onClick={handleForgotPassword} disabled={loading}>
+                    Forgot Password?
+                  </button>
                 </>
               )}
             </>
